@@ -12,6 +12,8 @@ trigger_zone = trigger_zone.to_crs(datasources.FJI_CRS)
 
 app = Dash(__name__)
 
+server = app.server
+
 app.layout = html.Div(
     [
         dcc.Dropdown(

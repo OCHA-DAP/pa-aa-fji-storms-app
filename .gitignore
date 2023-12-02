@@ -149,3 +149,6 @@ outputs
 
 # DS Store
 .DS_Store
+
+# Heroku
+*.pyc
