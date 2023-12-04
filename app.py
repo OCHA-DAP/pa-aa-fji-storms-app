@@ -16,7 +16,6 @@ server = app.server
 
 app.layout = html.Div(
     [
-        # dcc.Graph(id="graph-content", style={"height": "90vh"}),
         html.Div(
             id="left-sidebar",
             className="mt-4 ml-4",
@@ -45,16 +44,7 @@ app.layout = html.Div(
             },
             children=dcc.Graph(
                 id="graph-content",
-                # layout={"name": "preset", "fit": False},
                 style={"height": "100vh", "background-color": "#f8f9fc"},
-                # stylesheet=stylesheet,
-                # minZoom=0.2,
-                # maxZoom=2.0,
-                # boxSelectionEnabled=True,
-                # autoRefreshLayout=True,
-                # responsive=True,
-                # zoom=0.4,
-                # pan={"x": 500, "y": 300},
                 config={"displayModeBar": False},
             ),
         ),
