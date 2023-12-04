@@ -16,12 +16,48 @@ server = app.server
 
 app.layout = html.Div(
     [
-        dcc.Dropdown(
-            fms["Name Season"].unique(),
-            "Yasa 2020/2021",
-            id="dropdown-selection",
+        # dcc.Graph(id="graph-content", style={"height": "90vh"}),
+        html.Div(
+            id="left-sidebar",
+            className="mt-4 ml-4",
+            style={
+                "position": "fixed",
+                "width": "200px",
+                "top": 10,
+                "left": 10,
+                "zIndex": 1,
+            },
+            children=[
+                dcc.Dropdown(
+                    fms["Name Season"].unique(),
+                    "Yasa 2020/2021",
+                    id="dropdown-selection",
+                ),
+            ],
         ),
-        dcc.Graph(id="graph-content", style={"height": "90vh"}),
+        html.Div(
+            style={
+                "position": "fixed",
+                "top": 0,
+                "left": 0,
+                "width": "100%",
+                "zIndex": "0",
+            },
+            children=dcc.Graph(
+                id="graph-content",
+                # layout={"name": "preset", "fit": False},
+                style={"height": "100vh", "background-color": "#f8f9fc"},
+                # stylesheet=stylesheet,
+                # minZoom=0.2,
+                # maxZoom=2.0,
+                # boxSelectionEnabled=True,
+                # autoRefreshLayout=True,
+                # responsive=True,
+                # zoom=0.4,
+                # pan={"x": 500, "y": 300},
+                config={"displayModeBar": False},
+            ),
+        ),
     ]
 )
 
@@ -63,6 +99,9 @@ def update_graph(name_season):
         mapbox_center_lon=179,
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         # title=f"{name_season}<br>" f"<sup>{subtitle}</sup>",
+    )
+    fig.update_layout(
+        legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99)
     )
     return fig
 
