@@ -1,4 +1,5 @@
 import json
+import time
 
 import geopandas as gpd
 import numpy as np
@@ -10,6 +11,8 @@ from dash import Dash, Input, Output, callback, dcc, html
 from shapely import LineString
 
 import datasources
+
+INIT_NAMESEASON = "Yasa 2020/2021"
 
 # LOAD FILES
 cod2 = datasources.load_codab(2)
@@ -28,6 +31,7 @@ cod2 = cod2.set_index("Province")
 ecmwf["forecast_time"] = pd.to_datetime(ecmwf["forecast_time"])
 ecmwf["fms_speed"] = ecmwf["speed_knots"] * 0.940729 + 14.9982
 ecmwf["fms_cat"] = ecmwf["fms_speed"].apply(datasources.knots2cat)
+
 
 # SET UP APP
 app = Dash(__name__)
@@ -49,7 +53,7 @@ app.layout = html.Div(
                     fms.sort_values("datetime", ascending=False)[
                         "Name Season"
                     ].unique(),
-                    "Yasa 2020/2021",
+                    INIT_NAMESEASON,
                     id="dropdown-selection",
                     clearable=False,
                 ),
@@ -77,6 +81,8 @@ app.layout = html.Div(
     Output("graph-content", "figure"), Input("dropdown-selection", "value")
 )
 def update_graph(name_season):
+    start = time.time()
+
     def gdf_buffers(gdf):
         ls = LineString(gdf.geometry.to_crs(3832))
         polys = []
@@ -112,6 +118,8 @@ def update_graph(name_season):
         .sort_values("forecast_time")
         .copy()
     )
+    print(f"filter: {time.time() - start:.3f}")
+    start = time.time()
 
     # plot CODAB
     fig = px.choropleth_mapbox(
@@ -120,6 +128,8 @@ def update_graph(name_season):
         locations=cod2.index,
     )
     fig.update_traces(name="Provinces", marker_opacity=0.5)
+    print(f"codab: {time.time() - start:.3f}")
+    start = time.time()
 
     # plot trigger zone
     x, y = trigger_zone.geometry[0].boundary.xy
@@ -134,6 +144,8 @@ def update_graph(name_season):
             # showlegend=False,
         )
     )
+    print(f"trig_zone: {time.time() - start:.3f}")
+    start = time.time()
 
     # plot actual path
     fig.add_trace(
@@ -154,6 +166,8 @@ def update_graph(name_season):
             visible="legendonly",
         )
     )
+    print(f"path: {time.time() - start:.3f}")
+    start = time.time()
     # plot actual buffers
     buffers = gdf_buffers(ac_f)
 
@@ -176,6 +190,8 @@ def update_graph(name_season):
             visible="legendonly",
         )
     )
+    print(f"path_buf: {time.time() - start:.3f}")
+    start = time.time()
 
     # FMS forecasts
     for base_time in fm_f["base_time"].unique():
@@ -225,6 +241,8 @@ def update_graph(name_season):
                 visible="legendonly",
             )
         )
+    print(f"fms: {time.time() - start:.3f}")
+    start = time.time()
 
     # EC forecasts
     if fm_f.empty:
@@ -284,6 +302,22 @@ def update_graph(name_season):
                 visible="legendonly",
             )
         )
+    print(f"ec: {time.time() - start:.3f}")
+    start = time.time()
+
+    if fm_f.empty:
+        if ec_f.empty:
+            legend_title = ""
+        else:
+            legend_title = "ECMWF 120hr forecasts in colour"
+    else:
+        legend_title = (
+            "FMS 72hr forecasts in colour;<br>" "ECMWF 120hr forecasts in grey"
+        )
+    if trigger["ec_5day_trig"]:
+        legend_title += ";<br>R: Readiness"
+    if trigger["fms_fcast_trig"] or trigger["ec_3day_trig"]:
+        legend_title += ";<br>A: Action"
 
     fig.update_layout(
         mapbox_style="open-street-map",
@@ -299,6 +333,7 @@ def update_graph(name_season):
             xanchor="right",
             x=0.99,
             bgcolor="rgba(255,255,255,0.5)",
+            title=legend_title,
         ),
     )
     return fig
