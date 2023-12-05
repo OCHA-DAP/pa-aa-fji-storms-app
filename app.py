@@ -36,12 +36,13 @@ ecmwf["fms_cat"] = ecmwf["fms_speed"].apply(datasources.knots2cat)
 
 print(f"load: {time.time() - start:.3f}")
 start = time.time()
-init_fig = px.choropleth_mapbox(
-    cod2,
-    geojson=cod2.geometry,
-    locations=cod2.index,
-)
-init_fig.update_traces(name="Provinces", marker_opacity=0.5)
+# init_fig = px.choropleth_mapbox(
+#     cod2,
+#     geojson=cod2.geometry,
+#     locations=cod2.index,
+# )
+# init_fig.update_traces(name="Provinces", marker_opacity=0.5)
+init_fig = px.choropleth_mapbox()
 print(f"codab: {time.time() - start:.3f}")
 start = time.time()
 
