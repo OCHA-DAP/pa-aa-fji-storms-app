@@ -7,8 +7,42 @@ APP_DATA_DIR = Path("data")
 RAW_DIR = APP_DATA_DIR / "public" / "raw" / "fji"
 CODAB_PATH = RAW_DIR / "cod_ab"
 PROC_PATH = APP_DATA_DIR / "public" / "processed" / "fji"
+ECMWF_PROCESSED = (
+    APP_DATA_DIR
+    / "public"
+    / "exploration"
+    / "fji"
+    / "ecmwf"
+    / "cyclone_hindcasts"
+)
 
 FJI_CRS = "+proj=longlat +ellps=WGS84 +lon_wrap=180 +datum=WGS84 +no_defs"
+
+
+def knots2cat(knots: float) -> int:
+    """
+    Convert from knots to Category (Australian scale)
+    Parameters
+    ----------
+    knots: float
+        Wind speed in knots
+
+    Returns
+    -------
+    Category
+    """
+    category = 0
+    if knots > 107:
+        category = 5
+    elif knots > 85:
+        category = 4
+    elif knots > 63:
+        category = 3
+    elif knots > 47:
+        category = 2
+    elif knots > 33:
+        category = 1
+    return category
 
 
 def load_cyclonetracks() -> gpd.GeoDataFrame:
@@ -71,3 +105,49 @@ def load_buffer(distance: int = 250) -> gpd.GeoDataFrame:
     load_path = PROC_PATH / "buffer" / filename / f"{filename}.shp"
 
     return gpd.read_file(load_path)
+
+
+def load_historical_triggers() -> pd.DataFrame:
+    df = pd.read_csv(PROC_PATH / "historical_triggers.csv")
+    cols = [
+        "ec_3day_date",
+        "ec_5day_date",
+        "fms_fcast_date",
+        "fms_actual_date",
+    ]
+    for col in cols:
+        df[col] = pd.to_datetime(df[col])
+    return df
+
+
+def load_hindcasts() -> gpd.GeoDataFrame:
+    """
+    Loads RSMC / FMS hindcasts
+    Returns
+    -------
+    gdf of hindcasts
+    """
+    date_cols = ["time", "base_time"]
+    filename = "fms_historical_forecasts.csv"
+    df = pd.read_csv(PROC_PATH / filename, parse_dates=date_cols)
+    df = df.rename(columns={"time": "forecast_time"})
+
+    gdf = gpd.GeoDataFrame(
+        df, geometry=gpd.points_from_xy(df["Longitude"], df["Latitude"])
+    )
+    gdf.crs = "EPSG:4326"
+
+    return gdf
+
+
+def load_ecmwf_besttrack_hindcasts():
+    df = pd.read_csv(ECMWF_PROCESSED / "besttrack_forecasts.csv")
+    cols = ["time", "forecast_time"]
+    for col in cols:
+        df[col] = pd.to_datetime(df[col])
+    gdf = gpd.GeoDataFrame(
+        data=df,
+        geometry=gpd.points_from_xy(df["lon"], df["lat"], crs="EPSG:4326"),
+    )
+    gdf = gdf.to_crs(FJI_CRS)
+    return gdf

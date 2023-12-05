@@ -19,6 +19,17 @@ ECMWF_PROCESSED_REL_PATH = (
     / "cyclone_hindcasts"
     / "besttrack_forecasts.csv"
 )
+HIST_TRIGGERS_REL_PATH = PROC_REL_DIR / "historical_triggers.csv"
+
+REL_PATHS = [
+    ECMWF_PROCESSED_REL_PATH,
+    FMS_TRACKS_REL_PATH,
+    FMS_FORECASTS_REL_PATH,
+    ADM2_REL_PATH,
+    BUFFER_REL_PATH,
+    HIST_TRIGGERS_REL_PATH,
+]
+
 APP_DATA_DIR = Path("data")
 
 
@@ -27,14 +38,7 @@ def update_datasources():
     The folder structure in the APP_DATA_DIR is kept the same as in the
     Google Drive, to make things easier to load.
     """
-    rel_paths = [
-        ECMWF_PROCESSED_REL_PATH,
-        FMS_TRACKS_REL_PATH,
-        FMS_FORECASTS_REL_PATH,
-        ADM2_REL_PATH,
-        BUFFER_REL_PATH,
-    ]
-    for rel_path in rel_paths:
+    for rel_path in REL_PATHS:
         old_path = DATA_DIR / rel_path
         new_path = APP_DATA_DIR / rel_path
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
