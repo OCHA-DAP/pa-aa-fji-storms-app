@@ -34,6 +34,27 @@ ecmwf["forecast_time"] = pd.to_datetime(ecmwf["forecast_time"])
 ecmwf["fms_speed"] = ecmwf["speed_knots"] * 0.940729 + 14.9982
 ecmwf["fms_cat"] = ecmwf["fms_speed"].apply(datasources.knots2cat)
 
+# set init figure
+init_fig = px.choropleth_mapbox()
+init_fig.update_layout(
+    mapbox_style="open-street-map",
+    # mapbox_accesstoken=os.getenv("MB_TOKEN"),
+    mapbox_zoom=5.5,
+    mapbox_center_lat=-17,
+    mapbox_center_lon=179,
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    # title=f"{name_season}<br>" f"<sup>{subtitle}</sup>",
+    legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99,
+        bgcolor="rgba(255,255,255,0.5)",
+    ),
+)
+
+
+# setup base figure
 print(f"load: {time.time() - start:.3f}")
 start = time.time()
 # init_fig = px.choropleth_mapbox(
@@ -42,13 +63,13 @@ start = time.time()
 #     locations=cod2.index,
 # )
 # init_fig.update_traces(name="Provinces", marker_opacity=0.5)
-init_fig = px.choropleth_mapbox()
+base_fig = px.choropleth_mapbox()
 print(f"codab: {time.time() - start:.3f}")
 start = time.time()
 
 # plot trigger zone
 x, y = trigger_zone.geometry[0].boundary.xy
-init_fig.add_trace(
+base_fig.add_trace(
     go.Scattermapbox(
         lat=np.array(y),
         lon=np.array(x),
@@ -95,10 +116,14 @@ app.layout = html.Div(
                 "width": "100%",
                 "zIndex": "0",
             },
-            children=dcc.Graph(
-                id="graph-content",
-                style={"height": "100vh", "background-color": "#f8f9fc"},
-                config={"displayModeBar": False},
+            children=dcc.Loading(
+                dcc.Graph(
+                    figure=init_fig,
+                    id="graph-content",
+                    style={"height": "100vh", "background-color": "#f8f9fc"},
+                    config={"displayModeBar": False},
+                ),
+                parent_className="loading_wrapper",
             ),
         ),
     ]
@@ -172,7 +197,7 @@ def update_graph(name_season):
     #         # showlegend=False,
     #     )
     # )
-    fig = go.Figure(init_fig)
+    fig = go.Figure(base_fig)
     print(f"trig_zone: {time.time() - start:.3f}")
     start = time.time()
 
@@ -192,7 +217,7 @@ def update_graph(name_season):
             "Datetime: %{customdata[1]}",
             legendgroup="actual",
             legendgrouptitle_text="",
-            visible="legendonly",
+            # visible="legendonly",
         )
     )
     print(f"path: {time.time() - start:.3f}")
@@ -216,7 +241,7 @@ def update_graph(name_season):
             zmid=200,
             zmax=250,
             hoverinfo="skip",
-            visible="legendonly",
+            # visible="legendonly",
         )
     )
     print(f"path_buf: {time.time() - start:.3f}")
