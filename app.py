@@ -14,6 +14,8 @@ import datasources
 
 INIT_NAMESEASON = "Yasa 2020/2021"
 
+start = time.time()
+
 # LOAD FILES
 cod2 = datasources.load_codab(2)
 fms = datasources.load_cyclonetracks()
@@ -31,6 +33,31 @@ cod2 = cod2.set_index("Province")
 ecmwf["forecast_time"] = pd.to_datetime(ecmwf["forecast_time"])
 ecmwf["fms_speed"] = ecmwf["speed_knots"] * 0.940729 + 14.9982
 ecmwf["fms_cat"] = ecmwf["fms_speed"].apply(datasources.knots2cat)
+
+print(f"load: {time.time() - start:.3f}")
+start = time.time()
+init_fig = px.choropleth_mapbox(
+    cod2,
+    geojson=cod2.geometry,
+    locations=cod2.index,
+)
+init_fig.update_traces(name="Provinces", marker_opacity=0.5)
+print(f"codab: {time.time() - start:.3f}")
+start = time.time()
+
+# plot trigger zone
+x, y = trigger_zone.geometry[0].boundary.xy
+init_fig.add_trace(
+    go.Scattermapbox(
+        lat=np.array(y),
+        lon=np.array(x),
+        mode="lines",
+        name="Area within 250km of Fiji",
+        line=dict(width=1, color="dodgerblue"),
+        hoverinfo="skip",
+        # showlegend=False,
+    )
+)
 
 
 # SET UP APP
@@ -122,28 +149,29 @@ def update_graph(name_season):
     start = time.time()
 
     # plot CODAB
-    fig = px.choropleth_mapbox(
-        cod2,
-        geojson=cod2.geometry,
-        locations=cod2.index,
-    )
-    fig.update_traces(name="Provinces", marker_opacity=0.5)
-    print(f"codab: {time.time() - start:.3f}")
-    start = time.time()
-
-    # plot trigger zone
-    x, y = trigger_zone.geometry[0].boundary.xy
-    fig.add_trace(
-        go.Scattermapbox(
-            lat=np.array(y),
-            lon=np.array(x),
-            mode="lines",
-            name="Area within 250km of Fiji",
-            line=dict(width=1, color="dodgerblue"),
-            hoverinfo="skip",
-            # showlegend=False,
-        )
-    )
+    # fig = px.choropleth_mapbox(
+    #     cod2,
+    #     geojson=cod2.geometry,
+    #     locations=cod2.index,
+    # )
+    # fig.update_traces(name="Provinces", marker_opacity=0.5)
+    # print(f"codab: {time.time() - start:.3f}")
+    # start = time.time()
+    #
+    # # plot trigger zone
+    # x, y = trigger_zone.geometry[0].boundary.xy
+    # fig.add_trace(
+    #     go.Scattermapbox(
+    #         lat=np.array(y),
+    #         lon=np.array(x),
+    #         mode="lines",
+    #         name="Area within 250km of Fiji",
+    #         line=dict(width=1, color="dodgerblue"),
+    #         hoverinfo="skip",
+    #         # showlegend=False,
+    #     )
+    # )
+    fig = go.Figure(init_fig)
     print(f"trig_zone: {time.time() - start:.3f}")
     start = time.time()
 
