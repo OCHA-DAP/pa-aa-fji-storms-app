@@ -84,6 +84,8 @@ base_fig.add_trace(
 
 # SET UP APP
 app = Dash(__name__)
+app.title = "Fiji Tropical Cyclones - Historical Tracks and Forecasts"
+app._favicon = "assets/favicon.ico"
 server = app.server
 app.layout = html.Div(
     [
