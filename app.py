@@ -89,9 +89,13 @@ app._favicon = "assets/favicon.ico"
 server = app.server
 app.layout = html.Div(
     [
-        html.Div(
-            id="left-sidebar",
-            className="mt-4 ml-4",
+        dcc.Dropdown(
+            fms.sort_values("datetime", ascending=False)[
+                "Name Season"
+            ].unique(),
+            INIT_NAMESEASON,
+            id="dropdown-selection",
+            clearable=False,
             style={
                 "position": "fixed",
                 "width": "200px",
@@ -99,16 +103,20 @@ app.layout = html.Div(
                 "left": 10,
                 "zIndex": 1,
             },
-            children=[
-                dcc.Dropdown(
-                    fms.sort_values("datetime", ascending=False)[
-                        "Name Season"
-                    ].unique(),
-                    INIT_NAMESEASON,
-                    id="dropdown-selection",
-                    clearable=False,
-                ),
-            ],
+        ),
+        html.Div(
+            html.Em(
+                "Shaded areas around tracks indicate 50, 100, and "
+                "200km distances from the track.",
+                style={"color": "grey"},
+            ),
+            style={
+                "position": "fixed",
+                "width": "200px",
+                "bottom": 10,
+                "left": 10,
+                "zIndex": 1,
+            },
         ),
         html.Div(
             style={
@@ -116,7 +124,7 @@ app.layout = html.Div(
                 "top": 0,
                 "left": 0,
                 "width": "100%",
-                "zIndex": "0",
+                "zIndex": 0,
             },
             children=dcc.Loading(
                 dcc.Graph(
